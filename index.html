@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+
+  <head></head>
+
+  <body>
+
+    <div id="output"></div>
+
+    <style type="text/css">
+
+      @import url('https://fonts.googleapis.com/css2?family=Ubuntu+Mono&display=swap');
+
+      :root {
+        --bgBrown: #cbb690;
+        --proofLinkBrown: #795548;
+        --hoverBrown: #BAA288;
+        --tankColBrown: #9E8171;
+        --lightTextColor: #F5DEB3;
+      }
+
+      body {
+        background-color: var(--bgBrown);
+        font-family: Ubuntu Mono, monospace;
+      }
+
+      a {
+        color: var(--proofLinkBrown);
+        font-weight: bold;
+      }
+      
+      table {
+        border: 1px solid black;
+        border-collapse: collapse;;
+      }
+
+      th, td {
+        border: 1px solid black;
+        padding: 10px;
+        text-align: left;
+        vertical-align: middle;
+        text-align: center;
+      }
+
+      th {
+        color: var(--lightTextColor);
+        border-right: double black;
+      }
+      /* hide the double border for the leftmost header cell */
+      th:first-child {
+        border-right-style: none;
+      }
+
+      tr:hover {
+        background-color: var(--hoverBrown);
+      }
+
+      td:first-child {
+        background-color: var(--tankColBrown);
+        color: var(--lightTextColor);
+      }
+
+      /* select the right border after every record's proof link 
+       * to add some visual separation between horizontally adjacent wrs
+       */
+      td:nth-child(3n + 4) {
+        border-right: double;
+      }
+
+
+      #main-header {
+        background-color: var(--tankColBrown);
+        font-size: 30px;
+      }
+
+    </style>
+
+    <script>
+
+      const CONSTANTS = {
+      url: 'https://spreadsheets.google.com/feeds/cells/1HDQtELScci0UlVR4ESnvhM6V8bgAtNX8GI3pzq7cG8M/2/public/basic?range=B16:AF121&alt=json',
+      
+      numGamemodes: 10,
+      
+      gamemodes: {"FFA": "#E24E36", "Maze": "#FD9827", "2TDM": "#117BA5", "Maze 2TDM": "#0294C1", "4TDM": "#846187", "Maze 4TDM": "#A44E78", "Open Maze 4TDM": "#352073", "Domination (All)": "#FA8072", "Mothership (All)": "#DC71A1", "Open 3/4 TDM": "#689168"},
+
+      tanks: ["(Basic) Tank", "Director", "Flank Guard", "Machine Gun", "Pounder", "Sniper", "Trapper", "Twin", "Artillery", "Assassin", "Auto 3", "Builder", "Cruiser", "Destroyer", "Double Twin", "Gunner", "Hexa Tank", "Hunter", "Minigun", "Overseer", "Rifle", "Smasher", "Spawner", "Trap Guard", "Tri-Angle", "Triple Shot", "Tri-Trapper", "Underseer", "Annihilator", "Architect", "Auto-4", "Auto-5", "Auto Assassin", "Auto Builder", "Auto Double", "Auto Gunner", "Auto Overseer", "Auto Smasher", "Auto Spawner", "Auto Tri-Angle", "Banshee", "Barricade", "Battleship", "Bent Double", "Bent Hybrid", "Bomber", "Boomer", "Booster", "Bulwark", "Bushwhacker", "Carrier", "Conqueror", "Constructor", "Crop Duster", "Cyclone", "Dual", "Eagle", "Engineer", "Factory", "Falcon", "Fighter", "Fortress", "Gunner Trapper", "Hexa Trapper", "Hewn Double", "Hybrid", "Landmine", "Machine Gunner", "Maleficitor", "Manager", "Mega Smasher", "Mega-3", "Mortar", "Musket", "Nailgun", "Necromancer", "Octo Tank", "Overdrive", "Overgunner", "Overlord", "Overtrapper", "Penta Shot", "Poacher", "Predator", "Ranger", "Septa Trapper", "Shotgun", "Sidewinder", "Single", "Skimmer", "Spike", "Sprayer", "Spreadshot", "Stalker", "Streamliner", "Surfer", "Swarmer", "Triple Twin", "Triplet", "Twister",],
+    };
+
+
+    getData()
+      .then(data => printTable(data));
+
+
+    async function getData() 
+    {  
+      let response = await fetch(CONSTANTS.url);
+      
+      let data = await response.json();
+      
+      // look at the json returned in order to make sense of the stuff below:
+      data = data.feed.entry
+               .map(item => item.content.$t)
+               /* removes the gamemode name cells */
+               .filter(item => !( Object.keys(CONSTANTS.gamemodes) ).includes(item));
+      
+      console.log(data);
+      
+      return data;
+    }
+
+
+    async function printTable(data)
+    {
+      let numItems = 0;
+      let outputHTML = "<table>";
+
+      // add large title header
+      outputHTML += `<th colspan="${(CONSTANTS.numGamemodes * 3) + 1}" id="main-header">Arras.io World Records Archive</th>`;
+
+
+      // add gamemode headers
+      outputHTML += `<tr><th></th>`;
+
+      for (gamemode in CONSTANTS.gamemodes)
+      {
+        outputHTML += `<th colspan="3" style="background-color: ${CONSTANTS.gamemodes[gamemode]}">${gamemode}</th>`;
+      }
+
+      outputHTML += `</tr>`;
+
+
+      // everything else
+      for await (let item of data)
+      {
+        if (CONSTANTS.tanks.includes(item))
+        {
+          outputHTML += `</tr><tr><td>${item}</td>`;
+          continue;
+        }
+
+        
+        switch (numItems++ % 3) 
+        {
+          // score and name
+          case 0:
+          case 1:
+            outputHTML += `<td>${item}</td>`;
+            break;
+            
+          // proof link
+          case 2:
+            outputHTML += `<td><a href="${item}">Proof</a></td>`;
+            break;
+        }
+      }
+
+      outputHTML += `</table>`;
+
+      document.querySelector("#output").innerHTML = outputHTML;
+    }
+
+    </script>
+
+  </body>
+
+</html>
