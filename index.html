@@ -76,7 +76,22 @@
     </style>
 
     <script>
+      // For the future:
+      // currently theres bugs, like empty records causing existing ones of the same row to slide left and end up in the wrong column
+      // also theres no protection against people whose sheet names are identical to an existing tank or gamemode, or whose names include valid js code
+      // to fix this:
+      // make a new tab of the spreadsheet, and fill it with data from the Records sheet but formatted the way I want
+      // This way, I don't have to filter out gamemode names or do special stuff for tank names
+      // I can just dump tank names into the first column and use it directly, plus add image urls into the 0th column and make image objects from them
+      // also, I can add &#&#& or some other rarer symbol using apps script to indicate empty records, and filter them out in this script
+      // plus I can add newline characters after each row, to more easily figure out when to make a new table row
+      // also get a js library to make stick table headers/cols so that the tank/gamemode is always visible when scrolling through the records
 
+
+      // when sheet is updated, here's what you need to do:
+      // change the url's ?range= to cover the entirety of the new records, from tank column to last row of last gamemode column
+      // add the gamemode to gamemodes, along with its color
+      // add the tank to tanks, the same way it appears on the sheet
       const CONSTANTS = {
       url: 'https://spreadsheets.google.com/feeds/cells/1HDQtELScci0UlVR4ESnvhM6V8bgAtNX8GI3pzq7cG8M/2/public/basic?range=B16:AF121&alt=json',
       
