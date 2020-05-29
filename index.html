@@ -1,7 +1,9 @@
 <!DOCTYPE html>
 <html>
 
-  <head></head>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  </head>
 
   <body>
 
@@ -128,6 +130,7 @@
     async function printTable(data)
     {
       let numItems = 0;
+      let bgColor = "var(--bgBrown)";
       let outputHTML = "<table>";
 
       // add large title header
@@ -157,15 +160,21 @@
         
         switch (numItems++ % 3) 
         {
-          // score and name
+          // score
           case 0:
+            // update the bgColor whenever a new score appears
+            // then reuse color for name and proofLink, until a new score appears
+            bgColor = getScoreColor(item);
+
+          // name
+          // note that score falls through to use this html as well
           case 1:
-            outputHTML += `<td>${item}</td>`;
+            outputHTML += `<td style="background-color: ${bgColor}">${item}</td>`;
             break;
             
           // proof link
           case 2:
-            outputHTML += `<td><a href="${item}">Proof</a></td>`;
+            outputHTML += `<td style="background-color: ${bgColor}"><a href="${item}">Proof</a></td>`;
             break;
         }
       }
@@ -173,6 +182,34 @@
       outputHTML += `</table>`;
 
       document.querySelector("#output").innerHTML = outputHTML;
+    }
+
+
+
+    function getScoreColor(score)
+    {
+
+      // anything under 1 mil doesn't get a colored background
+      // aka, 123.45k has score[6] as k, so it returns early 
+      // with the default bg color
+      if (score[6] === 'k') return "var(--bgBrown)";
+
+
+      // get the first 4 characters (1.23mil -> 1.23)
+      score = score.slice(0,4);
+      score = parseFloat(score);
+
+
+      if      (score >= 7.50) return "#91CBD6";
+      else if (score >= 6.00) return "#FFA346";
+      else if (score >= 5.00) return "#EAE0C9";
+      else if (score >= 4.00) return "#649BD0";
+      else if (score >= 3.50) return "#AD93C1";
+      else if (score >= 3.00) return "#95C378";
+      else if (score >= 2.50) return "#DF7D73";
+      else if (score >= 2.00) return "#FOC143";
+      else if (score >= 1.50) return "#989B9D";
+      else if (score >= 1.00) return "#CFA087";
     }
 
     </script>
