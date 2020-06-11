@@ -2,6 +2,7 @@
 <html>
 
   <head>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
   </head>
 
@@ -103,7 +104,7 @@
       // add the gamemode to gamemodes, along with its color
       // add the tank to tanks, the same way it appears on the sheet
       const CONSTANTS = {
-      url: 'https://spreadsheets.google.com/feeds/cells/1HDQtELScci0UlVR4ESnvhM6V8bgAtNX8GI3pzq7cG8M/2/public/basic?range=B16:AF121&alt=json',
+      url: 'https://spreadsheets.google.com/feeds/cells/1HDQtELScci0UlVR4ESnvhM6V8bgAtNX8GI3pzq7cG8M/1/public/basic?range=F5:F8&alt=json',
       
       numGamemodes: 10,
       
@@ -114,24 +115,47 @@
 
 
     getData()
-      .then(data => printTable(data));
+      //.then(data => printTable(data));
+      .then(data => makeTable(data));
 
 
     async function getData() 
     {  
       let response = await fetch(CONSTANTS.url);
-      
       let data = await response.json();
       
-      // look at the json returned in order to make sense of the stuff below:
       data = data.feed.entry
-               .map(item => item.content.$t)
-               /* removes the gamemode name cells */
-               .filter(item => !( Object.keys(CONSTANTS.gamemodes) ).includes(item));
-      
+               .map(item => item.content.$t) // look at the json returned in order to make sense of this stuff
+               .join("") // sheets has max char limit per cell, so this recombines the split up data into one giant string again
+               .slice(2, -2) // remove the [[ at the beginning and ]] at the end
+               .split("],[") // make each sheet row into an array row
+               .map(row => row.split(",")) // split each array row into another array, representing each cell in that row
+               ;
+
       console.log(data);
       
       return data;
+    }
+
+
+    function makeTable(data)
+    {
+      let table = document.createElement("table");
+
+      for (const dataRow of data)
+      {
+        const tableRow = document.createElement("tr");
+
+        for (const dataCell of dataRow)
+        {
+          const tableCell = document.createElement("td");
+          tableRow.appendChild(tableCell);
+        }
+
+        table.appendChild(tableRow);
+      }
+
+      document.querySelector("body").appendChild(table);
     }
 
 
