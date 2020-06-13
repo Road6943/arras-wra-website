@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html>
 
@@ -12,47 +13,46 @@
 
     <style type="text/css">
 
-      @import url('https://fonts.googleapis.com/css2?family=Ubuntu+Mono&display=swap');
+      @import url('https://fonts.googleapis.com/css2?family=Ubuntu&display=swap');
 
       :root {
-        --bgBrown: #cbb690;
+        --background: #cbb690;
         --proofLinkBrown: #795548;
         --hoverBrown: #BAA288;
-        --tankColBrown: #9E8171;
-        --lightTextColor: #F5DEB3;
+        --tank-col: #9E8171;
+        --light-text: #F5DEB3;
+        --border: black;
+        --tier: rgb(126, 101, 88);
       }
 
       body {
-        background-color: var(--bgBrown);
-        font-family: Ubuntu Mono, monospace;
+        background-color: var(--background);
+        font-family: Ubuntu, monospace;
+
+        /* load the website more zoomed out than normal (1.0) */
+        transform: scale(0.5);
+        transform-origin: 0 0;
       }
       
       table {
-        border: 1px solid black;
+        border: 1px solid var(--border);
         border-collapse: collapse;;
       }
 
       th, td {
-        border: 1px solid black;
+        border: 1px solid var(--border);
         padding: 10px;
         text-align: left;
         vertical-align: middle;
         text-align: center;
       }
 
-      th {
-        color: var(--lightTextColor);
-        border-right: double black;
-      }
-      /* hide the double border for the leftmost header cell */
-      th:first-child {
-        border-right-style: none;
-      }
+      
 
-
+      /* make the tank pic and name columns darker than main sheet */
       td:first-child, td:nth-child(2) {
-        background-color: var(--tankColBrown);
-        color: var(--lightTextColor);
+        background-color: var(--tank-col);
+        color: var(--light-text);
       }
 
       /* make the score (1st line) bold by causing playerName to flow into 2nd line no matter what*/
@@ -68,50 +68,42 @@
       }
 
       #main-header {
-        background-color: var(--tankColBrown);
+        background-color: var(--tank-col);
         font-size: 30px;
       }
+
+      /* make spacing rows invisible, and literal space */
+      .spacing-row td {
+        border-color: var(--background);
+        background-color: var(--background);
+      }
+      .spacing-row td:first-child, .spacing-row td:nth-child(2) {
+        border-bottom-color: var(--border);
+      }
+
+      /* make tier rows identical to spacing rows, except for the tier cells on very left */
+      .tier-row td {
+        border-color: var(--background);
+        border-bottom-color: var(--border);
+      }
+      .tier-row td:first-child, .tier-row td:nth-child(2) {
+        border-color: var(--border);
+        background-color: var(--tier);
+      }
+
+      
 
     </style>
 
     <script>
-      // For the future:
-      // currently theres bugs, like empty records causing existing ones of the same row to slide left and end up in the wrong column
-      // also theres no protection against people whose sheet names are identical to an existing tank or gamemode, or whose names include valid js code
-      // to fix this:
-      // make a new tab of the spreadsheet, and fill it with data from the Records sheet but formatted the way I want
-      // This way, I don't have to filter out gamemode names or do special stuff for tank names
-      // I can just dump tank names into the first column and use it directly, plus add image urls into the 0th column and make image objects from them
-      // also, I can add &#&#& or some other rarer symbol using apps script to indicate empty records, and filter them out in this script
-      // plus I can add newline characters after each row, to more easily figure out when to make a new table row
-      // also get a js library to make stick table headers/cols so that the tank/gamemode is always visible when scrolling through the records
-
-      // NEW IDEA: read this: https://stackoverflow.com/a/33727897
-      // use this JSON feed for records: https://docs.google.com/spreadsheets/d/1HDQtELScci0UlVR4ESnvhM6V8bgAtNX8GI3pzq7cG8M/gviz/tq?tqx=out:json&sheet=Records
-      // its preformatted into rows and cols, and includes null values for empty cells!!!
-      // important note: you need to remove the ); at the end and the googleservice...( at the beginning
-      // I think a simple split or something should be enough to do that
-      // also note that the url supports querying, so I can use query commands directly through the url from New_Calculations for the P/T stats page
-      
-
       // when sheet is updated, here's what you need to do:
       // change the url's ?range= to cover the entirety of the new records, from tank column to last row of last gamemode column
-      // add the gamemode to gamemodes, along with its color
-      // add the tank to tanks, the same way it appears on the sheet
       const CONSTANTS = {
       url: 'https://spreadsheets.google.com/feeds/cells/1HDQtELScci0UlVR4ESnvhM6V8bgAtNX8GI3pzq7cG8M/1/public/basic?range=F5:H5&alt=json',
-      
-      numGamemodes: 10,
-      
-      gamemodes: {"FFA": "#E24E36", "Maze": "#FD9827", "2TDM": "#117BA5", "Maze 2TDM": "#0294C1", "4TDM": "#846187", "Maze 4TDM": "#A44E78", "Open Maze 4TDM": "#352073", "Domination (All)": "#FA8072", "Mothership (All)": "#DC71A1", "Open 3/4 TDM": "#689168"},
-
-      tanks: ["(Basic) Tank", "Director", "Flank Guard", "Machine Gun", "Pounder", "Sniper", "Trapper", "Twin", "Artillery", "Assassin", "Auto 3", "Builder", "Cruiser", "Destroyer", "Double Twin", "Gunner", "Hexa Tank", "Hunter", "Minigun", "Overseer", "Rifle", "Smasher", "Spawner", "Trap Guard", "Tri-Angle", "Triple Shot", "Tri-Trapper", "Underseer", "Annihilator", "Architect", "Auto-4", "Auto-5", "Auto Assassin", "Auto Builder", "Auto Double", "Auto Gunner", "Auto Overseer", "Auto Smasher", "Auto Spawner", "Auto Tri-Angle", "Banshee", "Barricade", "Battleship", "Bent Double", "Bent Hybrid", "Bomber", "Boomer", "Booster", "Bulwark", "Bushwhacker", "Carrier", "Conqueror", "Constructor", "Crop Duster", "Cyclone", "Dual", "Eagle", "Engineer", "Factory", "Falcon", "Fighter", "Fortress", "Gunner Trapper", "Hexa Trapper", "Hewn Double", "Hybrid", "Landmine", "Machine Gunner", "Maleficitor", "Manager", "Mega Smasher", "Mega-3", "Mortar", "Musket", "Nailgun", "Necromancer", "Octo Tank", "Overdrive", "Overgunner", "Overlord", "Overtrapper", "Penta Shot", "Poacher", "Predator", "Ranger", "Septa Trapper", "Shotgun", "Sidewinder", "Single", "Skimmer", "Spike", "Sprayer", "Spreadshot", "Stalker", "Streamliner", "Surfer", "Swarmer", "Triple Twin", "Triplet", "Twister",],
-    
     };
 
 
     getData()
-      //.then(data => printTable(data));
       .then(data => makeTable(data));
 
 
@@ -145,13 +137,26 @@
       {
         const tableRow = document.createElement("tr");
 
+
+        // spacing rows (fully blank between tiers)
+        // tier rows (say Tier 1/2/3/4)
+        const isSpacingRow = (dataRow[0] === "" && dataRow[1] === "");
+        const isTierRow = (dataRow[0] === "" && dataRow[1].toLowerCase().includes("tier"));
+
+        if (isSpacingRow) tableRow.classList.add("spacing-row");
+        else if (isTierRow) tableRow.classList.add("tier-row");
+
+        
+        
+
+
         // create cells for the tankPic and tankName cols
         const tankPic = document.createElement("td");
-        tankPic.textContent = (dataRow[0] !== "") ? dataRow[0] : ""; // JSON returns \"\" instead of actual emptiness
+        tankPic.textContent = dataRow[0];
         tableRow.appendChild(tankPic);
 
         const tankName = document.createElement("td");
-        tankName.textContent = (dataRow[1] !== "") ? dataRow[1] : ""; // JSON returns \"\" instead of actual emptiness, also json wraps everything in extra ""
+        tankName.textContent = dataRow[1];
         tableRow.appendChild(tankName);
 
 
@@ -207,7 +212,7 @@
       // anything under 1 mil doesn't get a colored background
       // aka, 123.45k has score[6] as k, so it returns early 
       // with the default bg color
-      if (score[6] === 'k') return "var(--bgBrown)";
+      if (score[6] === 'k') return "var(--background)";
 
       // get the first 4 characters (1.23mil -> 1.23)
       score = score.slice(0,4);
@@ -229,14 +234,8 @@
     // 1234567 -> 1.23mil, 123456 -> 123.46k
     function formatNumber(score)
     {
-      if (score >= 10**6) 
-      {
-        return (score / 10**6).toFixed(2) + "mil";
-      }
-      else 
-      {
-        return (score / 1000).toFixed(2) + "k";
-      }
+      if (score >= 10**6) return (score / 10**6).toFixed(2) + "mil";
+      else return (score / 1000).toFixed(2) + "k";
     }
 
     </script>
