@@ -32,6 +32,12 @@
         /* load the website more zoomed out than normal (1.0) */
         transform: scale(0.5);
         transform-origin: 0 0;
+
+        /* make body invisible at first 
+        so that we can set it to visible once everything
+        is done and make it seem like entire page loaded at
+        one time */
+        visibility: hidden;
       }
       
       table {
@@ -139,22 +145,11 @@
       return data;
     }
 
-
-    async function makeTable(data)
-    {
-      let table = document.createElement("table");
-
-      // add gamemode headers to top of table
-      const gamemodesRow = document.createElement("tr");
-
-      //todo: to make frozen: https://stackoverflow.com/questions/48593384/html-table-frozen-columns-with-pure-javascript-little-css
-
-      // what goes above the tank pic/name column
-      const initialSpaceCell = document.createElement("th");
-      initialSpaceCell.setAttribute("colspan", "2");
-      gamemodesRow.appendChild(initialSpaceCell);
-      
+    // return a document fragment that can be directly appended to tierRows
+    async function makeGamemodesRow()
+    {      
       const gamemodesArray = await getGamemodesArray();
+      let fragment = document.createDocumentFragment();
       
       // gamemodesArray is in the format of a long array
       // where 1st item is gamemode name, and then its immediately followed
@@ -164,12 +159,19 @@
         const cell = document.createElement("th");
         cell.textContent = gamemodesArray[i];
         cell.style.backgroundColor = gamemodesArray[i + 1];
-        gamemodesRow.appendChild(cell);
+
+        fragment.appendChild(cell);
       }
 
-      table.appendChild(gamemodesRow);
-      
+      return fragment;
+    }
 
+
+    async function makeTable(data)
+    {
+      let table = document.createElement("table");
+
+      //todo: to make frozen: https://stackoverflow.com/questions/48593384/html-table-frozen-columns-with-pure-javascript-little-css
 
       // make actual table data
       for (const dataRow of data)
@@ -214,6 +216,7 @@
           tankName.textContent = dataRow[1];
           tableRow.appendChild(tankName);
         }
+        
 
 
         // skip ahead to next row if spacing or tier
@@ -266,7 +269,29 @@
         table.appendChild(tableRow);
       }
 
+      // make the table editable on DOM by attaching it to the body
+      // however it will be invisible for now
       document.querySelector("body").appendChild(table);
+
+
+      // now make the gamemodes rows using a DOM fragment
+      // , and attach the fragment to tierRows
+      const gamemodesFragment = await makeGamemodesRow();
+      const tierRows = document.querySelectorAll(".tier-row");
+
+      tierRows.forEach(row => 
+      {
+        // we have to clone the fragment before appending, otherwise it disappears
+        // true indicates that we want a deep clone 
+        // (aka not just the row, but its descendant cells as well)
+        const clone = gamemodesFragment.cloneNode(true);
+        row.appendChild(clone);
+      });
+
+
+      // now that everything is done, make the body visible
+      // this is done to give the illusion that everything happens all at once on page load
+      document.querySelector("body").style.visibility = "visible";
     }
 
 
