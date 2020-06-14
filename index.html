@@ -21,7 +21,7 @@
         --hover-text: #795548;
         --tank-col: #9E8171;
         --light-text: #F5DEB3;
-        --border: black;
+        --border: #cbb690; /* originally black */
         --tier: rgb(126, 101, 88);
       }
 
@@ -55,6 +55,11 @@
         background-color: var(--tank-col);
         color: var(--light-text);
       }
+      /* remove border between tank pic and tank name */
+      td:first-child {
+        border-right-color: transparent;
+      }
+
 
       /* make the score (1st line) bold by causing playerName to flow into 2nd line no matter what*/
       a {
@@ -87,7 +92,7 @@
         border-color: var(--background);
         border-bottom-color: var(--border);
       }
-      .tier-row td:first-child, .tier-row td:nth-child(2) {
+      .tier-row td:first-child {
         border-color: var(--border);
         background-color: var(--tier);
       }
@@ -100,17 +105,19 @@
     // todo: 1st cell is all gamemodes and their score colors as an array of json objects, e.x. [{"FFA": "#abc123"}, {}, ...]
     // next three cells are strings that when combined together give a 2d array of the data in the records sheet
     const CONSTANTS = {
-      url: 'https://spreadsheets.google.com/feeds/cells/1HDQtELScci0UlVR4ESnvhM6V8bgAtNX8GI3pzq7cG8M/1/public/basic?range=F5:H5&alt=json',
+      gamemodesURL: 'https://spreadsheets.google.com/feeds/cells/1HDQtELScci0UlVR4ESnvhM6V8bgAtNX8GI3pzq7cG8M/1/public/basic?range=F5:F5&alt=json',
+      dataURL: 'https://spreadsheets.google.com/feeds/cells/1HDQtELScci0UlVR4ESnvhM6V8bgAtNX8GI3pzq7cG8M/1/public/basic?range=G5:I5&alt=json',
     };
 
 
+    // make the main table of tanknames and records
     getData()
       .then(data => makeTable(data));
 
 
     async function getData() 
     {  
-      let response = await fetch(CONSTANTS.url);
+      let response = await fetch(CONSTANTS.dataURL);
       let data = await response.json();
       
       data = data.feed.entry
@@ -164,23 +171,54 @@
 
         // spacing rows (fully blank between tiers)
         // tier rows (say Tier 1/2/3/4)
-        const isSpacingRow = (dataRow[0] === "" && dataRow[1] === "");
-        const isTierRow = (dataRow[0] === "" && dataRow[1].toLowerCase().includes("tier"));
+        const isSpacingRow = (!dataRow[0] && !dataRow[1]);
+        const isTierRow = (!dataRow[0] && dataRow[1].toLowerCase().includes("tier"));
 
         if (isSpacingRow) tableRow.classList.add("spacing-row");
         else if (isTierRow) tableRow.classList.add("tier-row");
 
         
-        // create cells for the tankPic and tankName cols
-        const tankPic = document.createElement("td");
-        tankPic.textContent = dataRow[0];
-        tableRow.appendChild(tankPic);
+        // create cells for the tankPic col
+        const tankPicCell = document.createElement("td");
+        // add images, but only do it for actual tank rows
+        if (!isTierRow && !isSpacingRow)
+        {
+          const tankPic = document.createElement("img");
+          tankPic.src = dataRow[0];
+          tankPic.height = "50"; // px
+          tankPicCell.appendChild(tankPic);
+        }
+        // for the tier rows, make 1 cell spanning both 1st 2 cols
+        else if (isTierRow)
+        {
+          tankPicCell.colSpan = "2";
+          tankPicCell.textContent = dataRow[1];
+        }
+        tableRow.appendChild(tankPicCell);
 
-        const tankName = document.createElement("td");
-        tankName.textContent = dataRow[1];
-        tableRow.appendChild(tankName);
 
 
+        // tank name cols
+        // tier rows have been taken care of above (1 giant cell spanning both tankpic and tankname)
+        if (!isTierRow)
+        {
+          const tankName = document.createElement("td");
+          tankName.textContent = dataRow[1];
+          tableRow.appendChild(tankName);
+        }
+
+
+        // skip ahead to next row if spacing or tier
+        // aka, theres only 1 child at the moment for these rows
+        if (isTierRow || isSpacingRow) 
+        {
+          table.appendChild(tableRow);
+          continue;
+        }
+
+
+
+        // make records cells for normal tank rows
         // start at 2 since tank/tankPic col, theres 3 cells per record (score/name/proofLink)
         for (let col = 2; col < dataRow.length; col += 3)
         {
