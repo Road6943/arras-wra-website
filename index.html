@@ -39,6 +39,10 @@
         border-collapse: collapse;
       }
 
+      th {
+        color: var(--light-text);
+      }
+
       th, td {
         border: 1px solid var(--border);
         padding: 10px;
@@ -55,9 +59,9 @@
         background-color: var(--tank-col);
         color: var(--light-text);
       }
-      /* remove border between tank pic and tank name */
+      
       td:first-child {
-        border-right-color: transparent;
+        border-right-color: transparent; /* remove border between tank pic and tank name */
       }
 
 
@@ -97,12 +101,11 @@
         background-color: var(--tier);
       }
       
-
     </style>
 
     <script>
     // expected data from the api:
-    // todo: 1st cell is all gamemodes and their score colors as an array of json objects, e.x. [{"FFA": "#abc123"}, {}, ...]
+    // gamemodesURL gives all gamemodes and their score colors as an array of arrays of gamemode & its color, e.x. [["FFA", "#abc123"], [,], ...]
     // next three cells are strings that when combined together give a 2d array of the data in the records sheet
     const CONSTANTS = {
       gamemodesURL: 'https://spreadsheets.google.com/feeds/cells/1HDQtELScci0UlVR4ESnvhM6V8bgAtNX8GI3pzq7cG8M/1/public/basic?range=F5:F5&alt=json',
@@ -137,25 +140,30 @@
     }
 
 
-    function makeTable(data)
+    async function makeTable(data)
     {
       let table = document.createElement("table");
 
-      // add gamemode headers to top of table - todo
+      // add gamemode headers to top of table
       const gamemodesRow = document.createElement("tr");
+
+      //todo: to make frozen: https://stackoverflow.com/questions/48593384/html-table-frozen-columns-with-pure-javascript-little-css
 
       // what goes above the tank pic/name column
       const initialSpaceCell = document.createElement("th");
       initialSpaceCell.setAttribute("colspan", "2");
       gamemodesRow.appendChild(initialSpaceCell);
       
-      const todoRemoveLater = [["FFA","red"], ["2TDM", "teal"]]; // todo: replace this with a json made on sheet using app script
+      const gamemodesArray = await getGamemodesArray();
       
-      for (const gamemode of todoRemoveLater)
+      // gamemodesArray is in the format of a long array
+      // where 1st item is gamemode name, and then its immediately followed
+      // by its color -> ["FFA", "#123abc", "2TDM", "#aabbcc", ...]
+      for (let i = 0; i < gamemodesArray.length; i += 2)
       {
         const cell = document.createElement("th");
-        cell.textContent = gamemode[0];
-        cell.style.backgroundColor = gamemode[1];
+        cell.textContent = gamemodesArray[i];
+        cell.style.backgroundColor = gamemodesArray[i + 1];
         gamemodesRow.appendChild(cell);
       }
 
@@ -296,6 +304,27 @@
       if (score >= 10**6) return (score / 10**6).toFixed(2) + "mil";
       else return (score / 1000).toFixed(2) + "k";
     }
+
+
+
+    async function getGamemodesArray()
+    {
+      let response = await fetch(CONSTANTS.gamemodesURL);
+      let data = await response.json();
+      
+      data = data.feed.entry
+                .map(item => item.content.$t) // look at the json returned in order to make sense of this stuff
+                .shift() // array only has 1 element, so set data to that element (the string of an array)
+                .slice(1, -1) // remove the [ at the beginning and the ] at the end
+                .split(",") // turn string into array again
+                .map(item => item.slice(1,-1)) // JSON adds extra "" around everything, so remove them
+                ;
+
+      console.log(data);
+      
+      return data;
+    }
+
 
 
     // todo: for normal theme options
