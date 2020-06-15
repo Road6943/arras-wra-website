@@ -9,20 +9,39 @@
   </head>
 
   <body>
+    <label for="choose-theme">Choose Theme:</label>
     <select id="choose-theme" name="choose-theme">
-      <option>Custom</option>
+        <option value="sand">Sand</option>
+      <option value="shadow">Shadow</option>
+      <!--<option value="silver">Silver</option>
+      <option value="snow">Snow</option>-->
     </select>
 
-    <div id="output"></div>
+    <h1>Arras.io World Records Archive</h1>
 
     <style type="text/css">
       :root {
         --background: #cbb690;
-        --hover-text: #795548;
         --tank-col: #9E8171;
-        --light-text: #F5DEB3;
+        --tier: #7e6558;
+        --normal-text: black;
+        --opposite-text: #F5DEB3;
+        --hover-text: #795548;
         --border: #cbb690; /* originally black */
-        --tier: rgb(126, 101, 88);
+        
+
+        /* score colors */
+        --score-10-15: #CFA087;
+        --score-15-20: #989B9D;
+        --score-20-25: #F0C143;
+        --score-25-30: #DF7D73;
+        --score-30-35: #95C378;
+        --score-35-40: #AD93C1;
+        --score-40-50: #649BD0;
+        --score-50-60: #EAE0C9;
+        --score-60-75: #FFA346;
+        --score-75-100: #91CBD6;
+        --score-100-up: #91CBD6;
       }
 
       body {
@@ -46,7 +65,7 @@
       }
 
       th {
-        color: var(--light-text);
+        color: var(--opposite-text);
       }
 
       th, td {
@@ -63,7 +82,7 @@
       td:first-child, td:nth-child(2) {
         /* make the tank pic and name columns darker than main sheet */
         background-color: var(--tank-col);
-        color: var(--light-text);
+        color: var(--opposite-text);
       }
       
       td:first-child {
@@ -74,7 +93,7 @@
       /* make the score (1st line) bold by causing playerName to flow into 2nd line no matter what*/
       a {
         white-space: pre-line;
-        color: black;
+        color: var(--normal-text);
         text-decoration: none;
       }
       a:hover {
@@ -92,6 +111,9 @@
       .spacing-row td {
         border-color: var(--background);
         background-color: var(--background);
+
+        /* add more space between tier tables */
+        height: 50px;
       }
       .spacing-row td:first-child, .spacing-row td:nth-child(2) {
         border-bottom-color: var(--border);
@@ -106,6 +128,9 @@
         border-color: var(--border);
         background-color: var(--tier);
       }
+
+
+
       
     </style>
 
@@ -122,6 +147,9 @@
     // make the main table of tanknames and records
     getData()
       .then(data => makeTable(data));
+
+    const themePicker = document.querySelector("#choose-theme");
+    themePicker.addEventListener("change", changeTheme);
 
 
     async function getData() 
@@ -159,6 +187,7 @@
         const cell = document.createElement("th");
         cell.textContent = gamemodesArray[i];
         cell.style.backgroundColor = gamemodesArray[i + 1];
+        cell.classList.add("gamemode-cell");
 
         fragment.appendChild(cell);
       }
@@ -244,7 +273,8 @@
             continue;
           }
 
-          const score = formatNumber(dataRow[col]);
+          const score = dataRow[col];
+          const formattedScore = formatNumber(score);
           const playerName = dataRow[col + 1];
 
           // make a link, and set it to open in new window, and prevent window.open malicious stuff
@@ -257,7 +287,7 @@
           link.textContent = playerName;
 
           // add bolded score and then linebreak right before the playerName
-          link.insertAdjacentHTML("afterbegin", `<strong>${score}</strong><br/>`);
+          link.insertAdjacentHTML("afterbegin", `<strong>${formattedScore}</strong><br/>`);
 
           // make bg color based on the score
           tableCell.style.backgroundColor = getScoreColor(score);
@@ -298,28 +328,23 @@
     
 
 
-    // passed in as a string like 123.45k or 1.23mil
+    // passed in as an actual number now
     function getScoreColor(score)
     {
-      // anything under 1 mil doesn't get a colored background
-      // aka, 123.45k has score[6] as k, so it returns early 
-      // with the default bg color
-      if (score[6] === 'k') return "var(--background)";
+      const mil = 10**6;
 
-      // get the first 4 characters (1.23mil -> 1.23)
-      score = score.slice(0,4);
-      score = parseFloat(score);
-
-      if      (score >= 7.50) return "#91CBD6";
-      else if (score >= 6.00) return "#FFA346";
-      else if (score >= 5.00) return "#EAE0C9";
-      else if (score >= 4.00) return "#649BD0";
-      else if (score >= 3.50) return "#AD93C1";
-      else if (score >= 3.00) return "#95C378";
-      else if (score >= 2.50) return "#DF7D73";
-      else if (score >= 2.00) return "#F0C143";
-      else if (score >= 1.50) return "#989B9D";
-      else if (score >= 1.00) return "#CFA087";
+      if      (score < 1.0*mil) return "var(--background)";
+      else if (score < 1.5*mil) return "var(--score-10-15)";
+      else if (score < 2.0*mil) return "var(--score-15-20)";
+      else if (score < 2.5*mil) return "var(--score-20-25)";
+      else if (score < 3.0*mil) return "var(--score-25-30)";
+      else if (score < 3.5*mil) return "var(--score-30-35)";
+      else if (score < 4.0*mil) return "var(--score-35-40)";
+      else if (score < 5.0*mil) return "var(--score-40-50)"; // [4mil to 5mil)
+      else if (score < 6.0*mil) return "var(--score-50-60)"; // [5mil to 6mil)
+      else if (score < 7.5*mil) return "var(--score-60-75)"; // [6mil to 7.5mil)
+      else if (score < 10.0*mil) return "var(--score-75-100)"; // [7.5mil to 10mil)
+      else if (score >= 10.0*mil) return "var(--score-100-up)"; // 10mil and above
     }
 
 
@@ -353,9 +378,77 @@
 
 
     // todo: for normal theme options
-    function changeTheme(themeName)
+    function changeTheme()
     {
-      
+      const themes = {
+        "sand": {
+          "--background":    "#cbb690",
+          "--tank-col":      "#9E8171",
+          "--tier":          "#7e6558",
+          "--normal-text":   "#000000",
+          "--opposite-text": "#F5DEB3",
+          "--hover-text":    "#795548",
+          "--border":        "#cbb690",
+          "--score-10-15":   "#CFA087",
+          "--score-15-20":   "#989B9D",
+          "--score-20-25":   "#F0C143",
+          "--score-25-30":   "#DF7D73",
+          "--score-30-35":   "#95C378",
+          "--score-35-40":   "#AD93C1",
+          "--score-40-50":   "#649BD0",
+          "--score-50-60":   "#EAE0C9",
+          "--score-60-75":   "#FFA346",
+          "--score-75-100":  "#91CBD6",
+          "--score-100-up":  "#91CBD6",
+        },
+        "shadow": { /* based on Gruvbox theme */
+          "--background":    "#282828", //
+          "--tank-col":      "#504945", //
+          "--tier":          "#3c3836", //
+          "--normal-text":   "#ebdbb2", //
+          "--opposite-text": "#ebdbb2", //
+          "--hover-text":    "#FFB7C5", // chose pink since it won't interfere with anything else
+          "--border":        "#282828", //
+          "--score-10-15":   "#928374",
+          "--score-15-20":   "#928374",
+          "--score-20-25":   "#427B58",
+          "--score-25-30":   "#427B58",
+          "--score-30-35":   "#076678",
+          "--score-35-40":   "#076678",
+          "--score-40-50":   "#8f3f71",
+          "--score-50-60":   "#9d0006",
+          "--score-60-75":   "#9d0006",
+          "--score-75-100":  "#d65d0e",
+          "--score-100-up":  "#C6930A", // not in gruvbox yellow - 	#C6930A, gruvbox colors - https://vimawesome.com/plugin/gruvbox
+        },
+        "silver": {
+          background: "gray",
+        },
+        "snow": {
+          background: "#f1f1f1"
+        },
+      };
+
+      const root = document.querySelector(":root").style;
+      const theme = themes[themePicker.value];
+
+      for (const variable in theme)
+      {
+        root.setProperty(variable, theme[variable]);
+      }
+
+      // darken the gamemode colors and tank pics for non-sand themes
+      // can't be done anyway else because the theme colors and tank pics are
+      // imported from the sheet in order to make the website never need maintenance
+      const gamemodeCells = document.querySelectorAll(".gamemode-cell");
+      gamemodeCells.forEach(cell => {
+        cell.style.opacity = (themePicker.value === "sand") ? "1" : "0.75";
+      });
+
+      const tankPics = document.querySelectorAll("img");
+      tankPics.forEach(pic => {
+        pic.style.filter = (themePicker.value === "sand") ? "brightness(100%)" : "brightness(75%)";
+      });
     }
 
 
