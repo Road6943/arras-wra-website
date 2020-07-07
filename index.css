@@ -1,0 +1,108 @@
+:root {
+    --background: #cbb690;
+    --tank-col: #9E8171;
+    --tier: #7e6558;
+    --normal-text: black;
+    --opposite-text: #F5DEB3;
+    --hover-text: #795548;
+    --border: #cbb690; /* originally black */
+
+
+    /* score colors */
+    --score-10-15: #CFA087;
+    --score-15-20: #989B9D;
+    --score-20-25: #F0C143;
+    --score-25-30: #DF7D73;
+    --score-30-35: #95C378;
+    --score-35-40: #AD93C1;
+    --score-40-50: #649BD0;
+    --score-50-60: #EAE0C9;
+    --score-60-75: #FFA346;
+    --score-75-100: #91CBD6;
+    --score-100-up: #91CBD6;    
+}
+
+body {
+    background-color: var(--background);
+    font-family: Ubuntu, sans-serif;
+
+    /* load the website more zoomed out than normal (1.0) */
+    transform: scale(0.75);
+    transform-origin: 0 0;
+
+    /* make body invisible at first 
+    so that we can set it to visible once everything
+    is done and make it seem like entire page loaded at
+    one time */
+    visibility: hidden;
+}
+
+table {
+    border: 1px solid var(--border);
+    border-collapse: collapse;
+}
+
+th {
+    color: var(--opposite-text);
+}
+
+th, td {
+    border: 1px solid var(--border);
+    padding: 10px;
+    text-align: left;
+    vertical-align: middle;
+    text-align: center;
+}
+
+
+
+
+td:first-child, td:nth-child(2) {
+    /* make the tank pic and name columns darker than main sheet */
+    background-color: var(--tank-col);
+    color: var(--opposite-text);
+}
+
+td:first-child {
+    border-right-color: transparent; /* remove border between tank pic and tank name */
+}
+
+
+/* make the score (1st line) bold by causing playerName to flow into 2nd line no matter what*/
+a {
+    white-space: pre-line;
+    color: var(--normal-text);
+    text-decoration: none;
+}
+a:hover {
+    text-decoration: underline;
+    font-style: italic;
+    color: var(--hover-text);
+}
+
+#main-header {
+    background-color: var(--tank-col);
+    font-size: 30px;
+}
+
+/* make spacing rows invisible, and literal space */
+.spacing-row td {
+    border-color: var(--background);
+    background-color: var(--background);
+
+    /* add more space between tier tables */
+    height: 50px;
+}
+.spacing-row td:first-child, .spacing-row td:nth-child(2) {
+    border-bottom-color: var(--border);
+}
+
+/* make tier rows identical to spacing rows, except for the tier cells on very left */
+.tier-row td {
+    border-color: var(--background);
+    border-bottom-color: var(--border);
+}
+.tier-row td:first-child {
+    border-color: var(--border);
+    background-color: var(--tier);
+}
